@@ -7,4 +7,6 @@
 ## Kết quả chạy chương trình
 
 Dưới đây là ảnh chụp màn hình kết quả chạy chương trình:
-![Uploading image.png…]()
+
+![image](https://github.com/user-attachments/assets/e7f0d9e6-a1d5-4957-ba29-9824bf12fc9c)
+
