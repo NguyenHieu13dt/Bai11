@@ -2,12 +2,12 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, FlatList, Text, StyleSheet } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
-import { addTodo, removeTodo, toggleTodo } from '../actions/todoActions';
+import { addTodo, removeTodo, toggleTodo, editTodo } from '../actions/todoActions';
 
 const TodoList = () => {
   const [text, setText] = useState('');
-  const [editingText, setEditingText] = useState(''); // Giá trị mới để chỉnh sửa todo
-  const [editingId, setEditingId] = useState(null); // ID của todo đang được chỉnh sửa
+  const [editingId, setEditingId] = useState(null);
+  const [editingText, setEditingText] = useState('');
   const todos = useSelector((state) => state.todo.todos);
   const dispatch = useDispatch();
 
@@ -18,17 +18,16 @@ const TodoList = () => {
     }
   };
 
-  const handleEditTodo = (id) => {
+  const handleEditTodo = (id, currentText) => {
     setEditingId(id);
-    const todoToEdit = todos.find((todo) => todo.id === id);
-    setEditingText(todoToEdit.text); // Đặt giá trị hiện tại vào `editingText`
+    setEditingText(currentText);
   };
 
   const handleSaveEdit = (id) => {
     if (editingText) {
-      dispatch({ type: 'EDIT_TODO', payload: { id, text: editingText } });
-      setEditingId(null); // Đặt lại `editingId` sau khi lưu
-      setEditingText(''); // Đặt lại `editingText`
+      dispatch(editTodo(id, editingText));
+      setEditingId(null);
+      setEditingText('');
     }
   };
 
@@ -41,7 +40,7 @@ const TodoList = () => {
         onChangeText={setText}
       />
       <Button title="Add Todo" onPress={handleAddTodo} />
-      
+
       <FlatList
         data={todos}
         keyExtractor={(item) => item.id.toString()}
@@ -50,11 +49,12 @@ const TodoList = () => {
             {editingId === item.id ? (
               <>
                 <TextInput
-                  style={styles.input}
+                  style={styles.editInput}
                   value={editingText}
                   onChangeText={setEditingText}
                 />
                 <Button title="Save" onPress={() => handleSaveEdit(item.id)} />
+                <Button title="Cancel" onPress={() => setEditingId(null)} />
               </>
             ) : (
               <>
@@ -67,7 +67,7 @@ const TodoList = () => {
                 >
                   {item.text}
                 </Text>
-                <Button title="Edit" onPress={() => handleEditTodo(item.id)} />
+                <Button title="Edit" onPress={() => handleEditTodo(item.id, item.text)} />
                 <Button title="Remove" onPress={() => dispatch(removeTodo(item.id))} />
               </>
             )}
@@ -78,53 +78,13 @@ const TodoList = () => {
   );
 };
 
-// Thêm `EDIT_TODO` trong reducer
-// reducers/todoReducer.js
-import { ADD_TODO, REMOVE_TODO, TOGGLE_TODO } from '../actions/todoActions';
-
-const initialState = {
-  todos: [],
-};
-
-export default function todoReducer(state = initialState, action) {
-  switch (action.type) {
-    case ADD_TODO:
-      return {
-        ...state,
-        todos: [
-          ...state.todos,
-          { id: Date.now(), text: action.payload, completed: false },
-        ],
-      };
-    case REMOVE_TODO:
-      return {
-        ...state,
-        todos: state.todos.filter((todo) => todo.id !== action.payload),
-      };
-    case TOGGLE_TODO:
-      return {
-        ...state,
-        todos: state.todos.map((todo) =>
-          todo.id === action.payload
-            ? { ...todo, completed: !todo.completed }
-            : todo
-        ),
-      };
-    case 'EDIT_TODO':
-      return {
-        ...state,
-        todos: state.todos.map((todo) =>
-          todo.id === action.payload.id ? { ...todo, text: action.payload.text } : todo
-        ),
-      };
-    default:
-      return state;
-  }
-}
-
+// styles
 const styles = StyleSheet.create({
   container: { padding: 20 },
   input: { padding: 10, borderWidth: 1, borderRadius: 5, marginBottom: 10 },
+  editInput: { padding: 10, borderWidth: 1, borderRadius: 5, flex: 1 },
   todoItem: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
   todoText: { fontSize: 18, flex: 1 },
 });
+
+export default TodoList;
